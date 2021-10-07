@@ -16,19 +16,28 @@ public class Personagem : MonoBehaviour
 
     public AudioClip getBoneSound;
 
-    // Start is called before the first frame update
+    private Vector3 initialPosition;
+
+    private bool isDead;
+
+    public GameObject shootBone;
+    private GameObject actualShoot;
+
     void Start()
     {
         this.qtdPulos = MAX_PULOS;
         this.qtdBones = 0;
+        this.initialPosition = this.transform.position;
+        this.isDead = false;
         AtualizarHud();
     }
 
-    // Update is called once per frame
     void Update()
     {
         VerifyWalk();
         VerifyJump();
+        VerifyDeath();
+        VerifyShoot();
     }
 
     void OnCollisionEnter2D(Collision2D col)
@@ -39,6 +48,7 @@ public class Personagem : MonoBehaviour
 
             this.GetComponent<Animator>().SetBool("isJumping", false);
         }
+        if(col.collider.CompareTag("zombie")) this.isDead = true;
     }
 
     void OnTriggerEnter2D(Collider2D col)
@@ -99,6 +109,33 @@ public class Personagem : MonoBehaviour
             this.GetComponent<Rigidbody2D>().AddForce(force, ForceMode2D.Impulse);
 
             this.GetComponent<Animator>().SetBool("isJumping", true);
+        }
+    }
+
+    public void VerifyDeath()
+    {
+        Vector3 actualPosition = this.transform.position;
+        if (actualPosition.y < -15f) this.isDead = true;
+
+        if(this.isDead)
+        {
+            this.transform.position = this.initialPosition;
+            this.isDead = false;
+        }
+    }
+
+    public void VerifyShoot()
+    {
+        if (Input.GetKey(KeyCode.Space) && this.actualShoot == null)
+        {
+            
+            
+            Vector3 shotPosition = this.transform.position;
+            if (this.GetComponent<SpriteRenderer>().flipX) shotPosition.x -= 1f;
+            else shotPosition.x += 1f;
+            this.actualShoot = Instantiate(this.shootBone, shotPosition, this.transform.rotation);
+            if (this.GetComponent<SpriteRenderer>().flipX) 
+                this.actualShoot.GetComponent<Shoot>().forceX *= -1;
         }
     }
 }
